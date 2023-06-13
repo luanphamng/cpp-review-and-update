@@ -17,21 +17,31 @@ Graph::Graph(const char* const & edgelist_csv_fn) {
     _csvFile.open(edgelist_csv_fn);
 
     while (getline(_csvFile, _line)) {
-        // cout << _line << endl;
+        // get from xls
         std::vector<std::string> v = split(_line.c_str(), ",");
-        
-        // Make graph
         string _nodeLabel = v[0];
         string _neighborName = v[1];
         double _weight = atof(v[2].c_str());
 
+        // Check if this is the new node
+        if (m_label2Id.find(_nodeLabel) == m_label2Id.end()) {
+            uint id = m_label2Id.size(); // add to last index
+            m_label2Id.insert({_nodeLabel, id});
+            m_id2label.insert({id, _nodeLabel});
+        }
+
+        if (m_label2Id.find(_neighborName) == m_label2Id.end()) {
+            uint id = m_label2Id.size(); // add to last index
+            m_label2Id.insert({_neighborName, id});
+            m_id2label.insert({id, _neighborName});
+        }
+
+        m_adj[m_label2Id[_nodeLabel]].push_back(make_pair(m_label2Id[_neighborName], _weight));
+        m_adj[m_label2Id[_neighborName]].push_back(make_pair(m_label2Id[_nodeLabel], _weight));
         m_iNumEdges++;
         // cout << "m_iNumEdges++ = " << m_iNumEdges << endl;
-        appendNodes(m_adj, _nodeLabel, _neighborName, _weight);
 
     }
-
-    m_iNumEdges = m_adj.size();
 
 }
 
@@ -45,8 +55,8 @@ unsigned int Graph::num_nodes() {
 
 vector<string> Graph::nodes() {
     vector<string> vt;
-    for (auto i : m_adj) {
-        vt.push_back(i.nodeLabel);
+    for (auto i : m_id2label) {
+        vt.push_back(m_id2label[i]);
     }
 
     return vt;
@@ -57,24 +67,28 @@ unsigned int Graph::num_edges() {
 }
 
 unsigned int Graph::num_neighbors(string const & node_label) {
-    unsigned int nodeId = getNodeIdByLabel(m_adj, node_label);
-    return m_adj[nodeId].neighbors.size();
+    uint node_id = m_label2Id[node_label];
+    return m_adj[node_id].size();
 }
 
 double Graph::edge_weight(string const & u_label, string const & v_label) {
-    unsigned int u_id = getNodeIdByLabel(m_adj, u_label);
-    for (int i = 0; i < m_adj[u_id].neighbors.size(); i++) {
-        if (v_label == m_adj[u_id].neighbors[i].first)
-            return m_adj[u_id].neighbors[i].second;
+    uint u_id = m_label2Id[u_label];
+    uint v_id = m_label2Id[v_label];
+
+    for (int i = 0; i < m_adj[u_id].size(); i++) {
+        if (v_id == m_adj[u_id][i].first)
+            return m_adj[u_id][i].second;
     }
+    return -1;
 }
 
 vector<string> Graph::neighbors(string const & node_label) {
     vector<string> rt;
 
-    unsigned int u_id = getNodeIdByLabel(m_adj, node_label);
-    for (int i = 0; i < m_adj[u_id].neighbors.size(); i++) {
-        rt.push_back(m_adj[u_id].neighbors[i].first);
+    uint node_id = m_label2Id[node_label];
+    for (int i = 0; i < m_adj[node_id].size(); i++) {
+        uint neighbor_id = m_adj[node_id][i].first;
+        rt.push_back(m_id2label[neighbor_id]);
     }
 
     return rt;
@@ -182,6 +196,8 @@ vector<string> Graph::split(const char *phrase, string delimiter) {
 void Graph::initVar() {
     m_iNumNodes = 0;
     m_iNumEdges = 0;
+    m_id2label.clear();
+    m_label2Id.clear();
 }
 
 int Graph::getNodeIdByLabel(vector<Node> adj, string nodeLabel)

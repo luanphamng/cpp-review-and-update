@@ -3,6 +3,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -16,16 +17,6 @@ using namespace std;
  * Otherwise, feel free to modify this file (including the "Graph" class) as much as you want.
  */
 class Graph {
-
-    struct Node {
-        string nodeLabel;
-        vector<pair<string, double>> neighbors;
-
-        Node(string label) {
-            nodeLabel = label;
-            // neighbors initialize is empty already by std lib
-        }
-    };
 
     public:
         /**
@@ -126,18 +117,17 @@ class Graph {
     private:
         vector<string> split(const char *phrase, string delimiter);
         void initVar();
-        int getNodeIdByLabel(vector<Node> adj, string nodeLabel);
-        void appendNodes(vector<Node> adj, string label, string neiLabel, double weight);
-        unsigned int addNewNode(vector<Node>& adj, string label);
-        bool BFS(vector<Node> adj, string srcLabel, string destLabel, vector<string> &pathResult);
-        bool dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
-        void DFSUtil(vector<Node> adj, double threhold, string srcLabel, bool visited[], vector<string> &result);
-        int minDistance(double dist[], bool sptSet[]);
+        // bool BFS(vector<Node> adj, string srcLabel, string destLabel, vector<string> &pathResult);
+        // bool dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
+        // void DFSUtil(vector<Node> adj, double threhold, string srcLabel, bool visited[], vector<string> &result);
+        // int minDistance(double dist[], bool sptSet[]);
 
     private:
         unsigned int m_iNumNodes;
         unsigned int m_iNumEdges;
-        vector<Node> m_adj;
+        map<string, int> m_label2Id;
+        map<int, string> m_id2label;
+        vector<pair<int, double>> m_adj[];
 };
 #endif
 
