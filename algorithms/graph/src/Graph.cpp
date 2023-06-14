@@ -104,6 +104,53 @@ vector<string> Graph::shortest_path_unweighted(string const & start_label, strin
     return _empty;
 }
 
+bool Graph::BFS(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<string> &pathResult)
+{
+    // cout << "BFS - start" << endl;
+    list<int> queue;
+    bool visited[m_iNumNodes];
+
+    for (int i = 0; i < m_iNumNodes; i++) {
+        visited[i] = false;
+    }
+ 
+    unsigned int firstNodeId = m_label2Id[srcLabel];
+    unsigned int destId = m_label2Id[destLabel];
+
+    queue.push_back(firstNodeId);
+ 
+    while (!queue.empty()) {
+        int u = queue.front();
+        queue.pop_front();
+        if (visited[u] == false) {
+            visited[u] = true;
+
+            pathResult.push_back(m_id2label[u]);
+
+            // Exception, src is dest => STOP
+            if (firstNodeId == destId) {
+                return true;
+            }
+            // add all neighbor of current point
+            for (int i = 0; i < adj[u].size(); i++) {
+                uint newId = adj[u][i].first;
+                if (!visited[newId])
+                    queue.push_back(newId);
+
+                // Stop BFS if destination found.
+                if (newId == destId) {
+                    string stringOfNewNode = m_id2label[newId];
+                    pathResult.push_back(stringOfNewNode);
+                    // cout << "BFS - end" << endl;
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false; // After travesal all graph, not found any path to dest
+}
+
 vector<tuple<string,string,double>> Graph::shortest_path_weighted(string const & start_label, string const & end_label) {
     // TODO
     vector<tuple<string,string,double>> result;
@@ -235,54 +282,6 @@ unsigned int Graph::addNewNode(vector<Node>& adj, string label)
     return adj.size() - 1;
 }
 
-bool Graph::BFS(vector<Node> adj, string srcLabel, string destLabel, vector<string> &pathResult)
-{
-    // cout << "BFS - start" << endl;
-    list<int> queue;
-    bool visited[m_iNumNodes];
-
-    for (int i = 0; i < m_iNumNodes; i++) {
-        visited[i] = false;
-    }
- 
-    unsigned int firstNodeId = getNodeIdByLabel(m_adj, srcLabel);
-    unsigned int destId = getNodeIdByLabel(adj, destLabel);
-
-    queue.push_back(firstNodeId);
- 
-    while (!queue.empty()) {
-        int u = queue.front();
-        queue.pop_front();
-        if (visited[u] == false) {
-            visited[u] = true;
-
-            pathResult.push_back(adj[u].nodeLabel);
-
-            // Exception, src is dest => STOP
-            if (firstNodeId == destId) {
-                return true;
-            }
-            // add all neighbor of current point
-            for (int i = 0; i < adj[u].neighbors.size(); i++) {
-                string newAddLabel = adj[u].neighbors[i].first;
-                unsigned int newId = getNodeIdByLabel(adj, newAddLabel);
-                if (!visited[newId])
-                    queue.push_back(newId);
-
-                // Stop BFS if destination found.
-                if (newId == destId) {
-
-                    pathResult.push_back(newAddLabel);
-                    // cout << "BFS - end" << endl;
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false; // After travesal all graph, not found any path to dest
-}
-
 // A  function to find the vertex with minimum distance value, from the set of vertices not yet included in shortest path tree
 int Graph::minDistance(double dist[], bool visited[])
 {
@@ -296,10 +295,10 @@ int Graph::minDistance(double dist[], bool visited[])
     return min_index;
 }
 
-bool Graph::dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector<tuple<string,string,double>>& result)
+bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string,string,double>>& result)
 {
-    unsigned int srdId = getNodeIdByLabel(adj, srcLabel);
-    unsigned int destId = getNodeIdByLabel(adj, destLabel);
+    unsigned int srdId = m_label2Id[srcLabel];
+    unsigned int destId = m_label2Id[destLabel];
     
     list<int> queue;
     double dist[m_iNumNodes];
@@ -321,10 +320,9 @@ bool Graph::dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector
         int u = queue.front();
         queue.pop_front();
 
-        for (int i = 0; i < adj[u].neighbors.size(); i++) {
-            string newAddLabel = adj[u].neighbors[i].first;
-            unsigned int newId = getNodeIdByLabel(adj, newAddLabel);
-            double nextDistance = adj[u].neighbors[i].second;
+        for (int i = 0; i < adj[u].size(); i++) {
+            uint newId = adj[u][i].first;
+            double nextDistance = adj[u][i].second;
 
             if (!visited[newId]) {
                 queue.push_back(newId);
@@ -350,7 +348,7 @@ bool Graph::dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector
     return false;
 }
 
-int minDistance(int dist[], bool sptSet[])
+int minDistance(double dist[], bool sptSet[])
 {
     // Initialize min value
     int min = INT_MAX, min_index;

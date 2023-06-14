@@ -117,10 +117,10 @@ class Graph {
     private:
         vector<string> split(const char *phrase, string delimiter);
         void initVar();
-        // bool BFS(vector<Node> adj, string srcLabel, string destLabel, vector<string> &pathResult);
-        // bool dijkstra(vector<Node> adj, string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
+        bool BFS(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<string> &pathResult);
+        bool dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
         // void DFSUtil(vector<Node> adj, double threhold, string srcLabel, bool visited[], vector<string> &result);
-        // int minDistance(double dist[], bool sptSet[]);
+        int minDistance(double dist[], bool sptSet[]);
 
     private:
         unsigned int m_iNumNodes;
