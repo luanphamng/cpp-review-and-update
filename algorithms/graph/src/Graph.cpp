@@ -39,10 +39,7 @@ Graph::Graph(const char* const & edgelist_csv_fn) {
         m_adj[m_label2Id[_nodeLabel]].push_back(make_pair(m_label2Id[_neighborName], _weight));
         m_adj[m_label2Id[_neighborName]].push_back(make_pair(m_label2Id[_nodeLabel], _weight));
         m_iNumEdges++;
-        // cout << "m_iNumEdges++ = " << m_iNumEdges << endl;
-
     }
-
 }
 
 Graph::~Graph() {
@@ -257,31 +254,6 @@ int Graph::getNodeIdByLabel(vector<Node> adj, string nodeLabel)
     return -1; // addNewNode(m_adj, nodeLabel);
 }
 
-void Graph::appendNodes(vector<Node> adj, string label, string neiLabel, double weight)
-{
-    // cout << "appendNodes - start " << endl;
-    int nodeID = getNodeIdByLabel(adj, label);
-    int nodeNeiID = getNodeIdByLabel(adj, neiLabel);
-    // cout << "appendNodes - nodeId: " << nodeID << ", nodeNeiId: " << nodeNeiID << endl;
-
-    if (nodeID < 0)
-        nodeID = addNewNode(m_adj, label);
-
-    if (nodeNeiID < 0) 
-        nodeNeiID = addNewNode(m_adj, neiLabel);
-
-    // cout << "appendNodes - addNewNode - nodeId: " << nodeID << ", nodeNeiId: " << nodeNeiID << endl;
-    m_adj[nodeID].neighbors.push_back(make_pair(neiLabel, weight));
-    m_adj[nodeNeiID].neighbors.push_back(make_pair(label, weight));
-    // cout << "appendNodes - end" << endl;
-}
-
-unsigned int Graph::addNewNode(vector<Node>& adj, string label)
-{
-    adj.push_back(Node(label));
-    return adj.size() - 1;
-}
-
 // A  function to find the vertex with minimum distance value, from the set of vertices not yet included in shortest path tree
 int Graph::minDistance(double dist[], bool visited[])
 {
@@ -295,7 +267,7 @@ int Graph::minDistance(double dist[], bool visited[])
     return min_index;
 }
 
-bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string,string,double>>& result)
+bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string, string, double>>& result)
 {
     unsigned int srdId = m_label2Id[srcLabel];
     unsigned int destId = m_label2Id[destLabel];
