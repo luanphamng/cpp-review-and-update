@@ -43,6 +43,10 @@ typedef vector<ii> vii;    // three data type shortcuts. They may look cryptic
 typedef vector<int> vi;    // but they are useful in competitive programming
 
 vi dfs_num;                // global variable, initially all values are set to UNVISITED
+<<<<<<< HEAD
+=======
+
+>>>>>>> update BFS
 vector<vii> AdjList;
 
 void dfs(int u)
