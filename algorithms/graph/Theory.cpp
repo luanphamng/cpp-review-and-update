@@ -10,13 +10,18 @@
 */
 
 #include <iostream>
+#include <vector>
+using namespace std;
+
+#define VISITED     true
+#define UNVISITED   false
 
 typedef pair<int, int> ii; // In this chapter, we will frequently use these
 typedef vector<ii> vii;    // three data type shortcuts. They may look cryptic
 typedef vector<int> vi;    // but they are useful in competitive programming
 
 vi dfs_num;                // global variable, initially all values are set to UNVISITED
-
+vector<vii> AdjList;
 
 // The DFS code shown here is very similar to the recursive backtracking code shown earlie
 void dfs(int u)

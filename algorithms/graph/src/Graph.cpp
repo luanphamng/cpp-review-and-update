@@ -7,6 +7,12 @@
 
 using namespace std;
 
+#define VISITED     true
+#define UNVISITED   false
+#define LOG
+
+// #define print //
+
 Graph::Graph(const char* const & edgelist_csv_fn) {
     // init every variable
     initVar();
@@ -20,26 +26,60 @@ Graph::Graph(const char* const & edgelist_csv_fn) {
         // get from xls
         std::vector<std::string> v = split(_line.c_str(), ",");
         string _nodeLabel = v[0];
-        string _neighborName = v[1];
+        string _neighborLabel = v[1];
         double _weight = atof(v[2].c_str());
+
+        uint nodeId = 0;
+        uint neighborId = 0;
 
         // Check if this is the new node
         if (m_label2Id.find(_nodeLabel) == m_label2Id.end()) {
-            uint id = m_label2Id.size(); // add to last index
+            uint id = m_label2Id.size(); // increase index
+#ifdef LOG
+            cout << __FUNCTION__ << " - new node need to added: " << _nodeLabel << ", id: " << id << endl;
+#endif
             m_label2Id.insert({_nodeLabel, id});
             m_id2label.insert({id, _nodeLabel});
+            // Push empty edges to adj
+            nodeId = id;
+            vector<idbl> edges;
+            m_adj.push_back(edges);
+        } else {
+            nodeId = m_label2Id[_nodeLabel];
         }
 
-        if (m_label2Id.find(_neighborName) == m_label2Id.end()) {
-            uint id = m_label2Id.size(); // add to last index
-            m_label2Id.insert({_neighborName, id});
-            m_id2label.insert({id, _neighborName});
+        if (m_label2Id.find(_neighborLabel) == m_label2Id.end()) {
+            uint id = m_label2Id.size(); // increase index
+#ifdef LOG
+            cout << __FUNCTION__ << " - new neighbor need to added: " << _neighborLabel << ", id: " << id << endl;
+#endif
+            m_label2Id.insert({_neighborLabel, id});
+            m_id2label.insert({id, _neighborLabel});
+            // Push empty edges to adj
+            vector<idbl> edges;
+            neighborId = id;
+            m_adj.push_back(edges);
+        } else {
+            neighborId = m_label2Id[_neighborLabel];
         }
 
-        m_adj[m_label2Id[_nodeLabel]].push_back(make_pair(m_label2Id[_neighborName], _weight));
-        m_adj[m_label2Id[_neighborName]].push_back(make_pair(m_label2Id[_nodeLabel], _weight));
+        cout << __FUNCTION__ << "Size of adj: " << m_adj.size() << ", nodeId: " << nodeId << ", neighId: " << neighborId << endl;
+        m_adj[nodeId].push_back(make_pair(neighborId, _weight));
+        m_adj[neighborId].push_back(make_pair(nodeId, _weight));
+
         m_iNumEdges++;
     }
+
+#ifdef LOG
+    cout << "Adj input: " << endl;
+    for (uint i = 0; i < m_id2label.size(); i++) {
+        cout << m_id2label[i] << " -> ";
+        for (auto u : m_adj[i]) {
+            cout << m_id2label[u.first];
+        }
+        cout << endl;
+    }
+#endif
 }
 
 Graph::~Graph() {
@@ -47,12 +87,12 @@ Graph::~Graph() {
 
 unsigned int Graph::num_nodes() {
     // TODO
-    return m_iNumEdges;
+    return m_id2label.size();
 }
 
 vector<string> Graph::nodes() {
     vector<string> vt;
-    for (auto i : m_id2label) {
+    for (uint i = 0; i < m_id2label.size(); i++) {
         vt.push_back(m_id2label[i]);
     }
 
@@ -72,7 +112,7 @@ double Graph::edge_weight(string const & u_label, string const & v_label) {
     uint u_id = m_label2Id[u_label];
     uint v_id = m_label2Id[v_label];
 
-    for (int i = 0; i < m_adj[u_id].size(); i++) {
+    for (uint i = 0; i < m_adj[u_id].size(); i++) {
         if (v_id == m_adj[u_id][i].first)
             return m_adj[u_id][i].second;
     }
@@ -83,7 +123,7 @@ vector<string> Graph::neighbors(string const & node_label) {
     vector<string> rt;
 
     uint node_id = m_label2Id[node_label];
-    for (int i = 0; i < m_adj[node_id].size(); i++) {
+    for (uint i = 0; i < m_adj[node_id].size(); i++) {
         uint neighbor_id = m_adj[node_id][i].first;
         rt.push_back(m_id2label[neighbor_id]);
     }
@@ -101,13 +141,13 @@ vector<string> Graph::shortest_path_unweighted(string const & start_label, strin
     return _empty;
 }
 
-bool Graph::BFS(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<string> &pathResult)
+bool Graph::BFS(vector<vector<idbl>> adj, string srcLabel, string destLabel, vector<string> &pathResult)
 {
     // cout << "BFS - start" << endl;
     list<int> queue;
     bool visited[m_iNumNodes];
 
-    for (int i = 0; i < m_iNumNodes; i++) {
+    for (uint i = 0; i < m_iNumNodes; i++) {
         visited[i] = false;
     }
  
@@ -129,7 +169,7 @@ bool Graph::BFS(vector<pair<int, double>> adj[], string srcLabel, string destLab
                 return true;
             }
             // add all neighbor of current point
-            for (int i = 0; i < adj[u].size(); i++) {
+            for (uint i = 0; i < adj[u].size(); i++) {
                 uint newId = adj[u][i].first;
                 if (!visited[newId])
                     queue.push_back(newId);
@@ -148,6 +188,7 @@ bool Graph::BFS(vector<pair<int, double>> adj[], string srcLabel, string destLab
     return false; // After travesal all graph, not found any path to dest
 }
 
+
 vector<tuple<string,string,double>> Graph::shortest_path_weighted(string const & start_label, string const & end_label) {
     // TODO
     vector<tuple<string,string,double>> result;
@@ -161,60 +202,79 @@ vector<tuple<string,string,double>> Graph::shortest_path_weighted(string const &
 }
 
 vector<vector<string>> Graph::connected_components(double const & threshold) {
-    // remove connection larger than threshold
-    vector<Node> adj = m_adj;
-    int iNumNode = m_iNumNodes;
-    // for (int i = 0 ; i < iNumNode; i++) {
-    //     for (auto it = adj[i].neighbors.begin(); it != adj[i].neighbors.end(); ++it) {
-    //         if (it->second > threshold) {
-    //             adj[i].neighbors.erase(it);
-    //             i--;
-    //             iNumNode--;
-    //         }
-    //     }
-    // }
+    const uint numOfNodes = m_id2label.size();
+    bool visited[numOfNodes];
+    vvs result;
 
-    unsigned int newAdjSize = adj.size();
-    vector<vector<string>> result;
     // Mark all the vertices as not visited
-    bool* visited = new bool[newAdjSize];
-    for (int v = 0; v < newAdjSize; v++)
-        visited[v] = false;
- 
-    for (int v = 0; v < newAdjSize; v++) {
-        vector<string> oneResult;
-        if (visited[v] == false) {
+    for (uint i = 0; i < numOfNodes; i++) {
+        visited[i] = UNVISITED;
+    }
+
+    for (uint v = 0; v < numOfNodes; v++) {
+        if (visited[v] == UNVISITED) {
+#ifdef LOG
+            cout << __func__ << " - Num of nodes: " << numOfNodes << endl;
+            cout << __func__ << " - Unvisited at: " << v << endl;
+#endif
+            vs oneResult;
+            // push start of DFS node to result as alway
+            oneResult.push_back(m_id2label[v]);
             // get all reachable vertices from v
-            DFSUtil(adj, threshold, adj[v].nodeLabel, visited, oneResult);
+            dfs(v, visited, oneResult);
+            // return from DFS, means new connection is detected
             result.push_back(oneResult);
         }
     }
-    delete[] visited;
 
     return result;
 }
 
-void Graph::DFSUtil(vector<Node> adj, double threhold ,string srcLabel, bool visited[], vector<string>& result)
+void Graph::setVisited(bool visited[], uint visitedSize, uint id)
 {
-    // Mark the current node as visited and print it
-    uint srcId = getNodeIdByLabel(adj, srcLabel);
-    visited[srcId] = true;
-    // cout << "DFSUtil - pushback to result: " << srcLabel << endl;
-    result.push_back(srcLabel);
+#ifdef LOG
+    cout << __func__ << " - setVisited at id: " << id << endl;
+#endif
+    if (id < visitedSize) {
+        visited[id] = VISITED;
+    }
+#ifdef LOG
+    cout << "visited : ";
+    for (uint i = 0; i < visitedSize; i++) {cout << visited[i] << " ";}
+    cout << endl;
+#endif
+}
 
-    // cout << srcId << endl;
-    // Recur for all the vertices adjacent to this vertex
-    for (auto i = adj[srcId].neighbors.begin(); i != adj[srcId].neighbors.end(); ++i) {
-        string currentNodeLabel = i->first;
-        double distance = i->second;
-        uint currentNodeId = getNodeIdByLabel(adj, currentNodeLabel);
-        if (distance <= threhold) {
-            if (!visited[currentNodeId]) {
-                DFSUtil(adj, threhold, currentNodeLabel, visited, result);
+void Graph::dfs(uint id, bool visited[], vs& result) {
+    cout << __func__ << " - checking at id = : " << id << endl;
+    // Add first point to result as alway
+
+    uint numOfNei = m_adj[id].size();
+    setVisited(visited, m_id2label.size(), id);
+
+    // Check all neighbors
+    if (numOfNei) {
+        for (uint i = 0; i < numOfNei; i++) {
+            // Get all neighbors of current nodeid
+            uint neiNodeid = m_adj[id][i].first;
+            if (visited[neiNodeid] == UNVISITED) {
+                string neiNodeLabel = m_id2label[neiNodeid];
+#ifdef LOG
+                cout << __func__ << " - Num of nodes: " << numOfNei << endl;
+                cout << __func__ << " - Unvisited at: " << neiNodeid << endl;
+                cout << __func__ << " - push_back : " << neiNodeLabel << endl;
+#endif
+                result.push_back(neiNodeLabel);
+                dfs(m_adj[id][i].first, visited, result);
             }
-        } else {
-            visited[currentNodeId] = true;
         }
+    } else {
+#ifdef LOG
+        cout << "Go to end of connections" << endl;
+#endif
+        for (string str : result) {cout << str;}
+            cout << endl;
+        return;
     }
 }
 
@@ -244,30 +304,20 @@ void Graph::initVar() {
     m_label2Id.clear();
 }
 
-int Graph::getNodeIdByLabel(vector<Node> adj, string nodeLabel)
-{
-    for (int i = 0; i < adj.size(); i++) {
-        if (adj[i].nodeLabel == nodeLabel)
-            return i;
-    }
-    // if not found
-    return -1; // addNewNode(m_adj, nodeLabel);
-}
-
 // A  function to find the vertex with minimum distance value, from the set of vertices not yet included in shortest path tree
 int Graph::minDistance(double dist[], bool visited[])
 {
     // Initialize min value
     int min = INT_MAX, min_index;
   
-    for (int v = 0; v < m_iNumNodes; v++)
+    for (uint v = 0; v < m_iNumNodes; v++)
         if (visited[v] == false && dist[v] <= min)
             min = dist[v], min_index = v;
   
     return min_index;
 }
 
-bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string, string, double>>& result)
+bool Graph::dijkstra(vector<vector<idbl>> adj, string srcLabel, string destLabel, vector<tuple<string, string, double>>& result)
 {
     unsigned int srdId = m_label2Id[srcLabel];
     unsigned int destId = m_label2Id[destLabel];
@@ -279,7 +329,7 @@ bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string de
     selectedNode.push_back(srdId);
 
     dist[srdId] = 0;
-    for (int i = 0; i < m_iNumNodes; i++) {
+    for (uint i = 0; i < m_iNumNodes; i++) {
         visited[i] = false;
         if (i != srdId) {
             dist[i] = INT_MAX;
@@ -292,7 +342,7 @@ bool Graph::dijkstra(vector<pair<int, double>> adj[], string srcLabel, string de
         int u = queue.front();
         queue.pop_front();
 
-        for (int i = 0; i < adj[u].size(); i++) {
+        for (uint i = 0; i < adj[u].size(); i++) {
             uint newId = adj[u][i].first;
             double nextDistance = adj[u][i].second;
 
@@ -324,7 +374,7 @@ int minDistance(double dist[], bool sptSet[])
 {
     // Initialize min value
     int min = INT_MAX, min_index;
-    // for (int v = 0; v < V; v++)
+    // for (uint v = 0; v < V; v++)
     //     if (sptSet[v] == false && dist[v] <= min)
     //         min = dist[v], min_index = v;
     return min_index;

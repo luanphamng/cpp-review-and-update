@@ -5,7 +5,14 @@
 #include <vector>
 #include <map>
 
+#define MAX_ELEMENT 100
+
 using namespace std;
+
+typedef pair<int, double> idbl;
+typedef pair<int, int> ii;
+typedef vector<string> vs;
+typedef vector<vs> vvs;
 
 /**
  * Class to implement an undirected graph with non-negative edge weights. Feel free to do any of the following:
@@ -117,9 +124,11 @@ class Graph {
     private:
         vector<string> split(const char *phrase, string delimiter);
         void initVar();
-        bool BFS(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<string> &pathResult);
-        bool dijkstra(vector<pair<int, double>> adj[], string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
+        bool BFS(vector<vector<idbl>> m_adj, string srcLabel, string destLabel, vector<string> &pathResult);
+        void setVisited(bool visited[], uint visitedSize, uint id);
+        bool dijkstra(vector<vector<idbl>> m_adj, string srcLabel, string destLabel, vector<tuple<string,string,double>>& result);
         // void DFSUtil(vector<Node> adj, double threhold, string srcLabel, bool visited[], vector<string> &result);
+        void dfs(uint id, bool visited[], vs& result);
         int minDistance(double dist[], bool sptSet[]);
 
     private:
@@ -127,7 +136,7 @@ class Graph {
         unsigned int m_iNumEdges;
         map<string, int> m_label2Id;
         map<int, string> m_id2label;
-        vector<pair<int, double>> m_adj[];
+        vector<vector<idbl>> m_adj;
 };
 #endif
 
