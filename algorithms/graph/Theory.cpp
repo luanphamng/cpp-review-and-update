@@ -43,10 +43,6 @@ typedef vector<ii> vii;    // three data type shortcuts. They may look cryptic
 typedef vector<int> vi;    // but they are useful in competitive programming
 
 vi dfs_num;                // global variable, initially all values are set to UNVISITED
-<<<<<<< HEAD
-=======
-
->>>>>>> update BFS
 vector<vii> AdjList;
 
 void dfs(int u)
@@ -97,6 +93,63 @@ void bfs(int s) // s = srouce id
     }
 }
 
-void dijktra() {
-    vi dist(V, INT_MAX)
+/*
+    If the given graph is weighted, BFS does not work. This is because there can be ‘longer’
+    path(s) (in terms of number of vertices and edges involved in the path) but has smaller total
+    weight than the ‘shorter’ path found by BFS. For example, in Figure 4.17, the shortest path
+    from source vertex 2 to vertex 3 is not via direct edge 2 → 3 with weight 7 that is normally
+    found by BFS, but a ‘detour’ path: 2 → 1 → 3 with smaller total weight 2 + 3 = 5.
+    To solve the SSSP problem on weighted graph, we use a greedy Edsger Wybe Dijkstra’s
+    algorithm. There are several ways to implement this classic algorithm. In fact, Dijkstra’s
+    original paper that describes this algorithm [10] does not describe a specific implementation.
+    Many other Computer Scientists proposed implementation variants based on Dijkstra’s original work. Here we adopt one of the easiest implementation variant that uses built-in C++
+    STL priority queue (or Java PriorityQueue). This is to keep the length of code minimal—a necessary feature in competitive programming.
+    This Dijkstra’s variant maintains a priority queue called pq that stores pairs of vertex
+    information. The first and the second item of the pair is the distance of the vertex from the
+    source and the vertex number, respectively. This pq is sorted based on increasing distance
+    from the source, and if tie, by vertex number. This is different from another Dijkstra’s
+    implementation that uses binary heap feature that is not supported in built-in library8.
+    This pq only contains one item initially: The base case (0, s) which is true for the source
+    vertex. Then, this Dijkstra’s implementation variant repeats the following process until pq
+    is empty: It greedily takes out vertex information pair (d, u) from the front of pq. If the
+    distance to u from source recorded in d greater than dist[u], it ignores u; otherwise, it
+    process u. The reason for this special check is shown below.
+    When this algorithm process u, it tries to relax all neighbors v of u. Every time it
+    relaxes an edge u → v, it will enqueue a pair (newer/shorter distance to v from source, v)
+    into pq and leave the inferior pair (older/longer distance to v from source, v) inside pq. This
+    is called ‘Lazy Deletion’ and it causes more than one copy of the same vertex in pq with
+    different distances from source. That is why we have the check earlier to process only the
+    first dequeued vertex information pair which has the correct/shorter distance (other copies
+    will have the outdated/longer distance). The code is shown below and it looks very similar
+    to BFS and Prim’s code shown in Section 4.2.2 and 4.3.3, respectively.
+*/
+
+void dijktra_priority_queue(uint id) {
+    vi dist(V, INT_MAX);
+    dist[id] = 0;
+
+    priority_queue<ii, vector<ii>, greater<ii>> pq;
+    pq.push(ii(0, s));
+
+    while (!pq.empty())
+    {
+        ii front = pq.top();
+        pq.pop();
+        uint d = front.first;
+        uint neiID = front.second;
+
+        if (d > dist[neiID])  // IMPORTANT: if dist[neiID] already small then ignore checking process]
+            continue;
+
+        for (uint i = 0; i < adj[neiID].size(); i++) {
+            ii v = adj[id][i];
+
+            // Main algorithm
+            if (dist[neiID] > dist[d] + v.second) {
+                dist[neiID] = dist[d] + v.second;
+                pq.push(ii(dist[neiId], neiId));
+            }
+        }
+    }
+    
 }

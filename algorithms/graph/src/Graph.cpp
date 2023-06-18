@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits.h>
 #include <list>
+#include <queue>
 
 using namespace std;
 
@@ -70,6 +71,7 @@ Graph::Graph(const char* const & edgelist_csv_fn) {
         m_iNumEdges++;
     }
 
+    m_iNumNodes = m_id2label.size();
 #ifdef LOG
     cout << "Adj input: " << endl;
     for (uint i = 0; i < m_id2label.size(); i++) {
@@ -322,51 +324,38 @@ bool Graph::dijkstra(vector<vector<idbl>> adj, string srcLabel, string destLabel
     unsigned int srdId = m_label2Id[srcLabel];
     unsigned int destId = m_label2Id[destLabel];
     
-    list<int> queue;
-    double dist[m_iNumNodes];
-    bool visited[m_iNumNodes];
-    vector<int> selectedNode;
-    selectedNode.push_back(srdId);
+    double distance[m_iNumNodes];
+    for (uint i = 0; i < m_iNumNodes; i++)  distance[i] = INT_MAX;
 
-    dist[srdId] = 0;
-    for (uint i = 0; i < m_iNumNodes; i++) {
-        visited[i] = false;
-        if (i != srdId) {
-            dist[i] = INT_MAX;
+    //start from src node
+    srdId = m_label2Id[srcLabel];
+    destId = m_label2Id[destLabel];
+
+    priority_queue<dbli, vector<dbli>, greater<dbli>> pq;
+    pq.push(dbli(0, srdId));
+
+    while (!pq.empty()) {
+        dbli front = pq.top();
+        pq.pop();
+
+        double d = front.first;
+        uint uId = front.second;
+
+        if (d > distance[uId]) {
+            continue;
+        }
+
+    for (uint i = 0; i < adj[uId].size(); i++) {
+        dbli nei = dbli(adj[uId][i].second, adj[uId][i].first); // dbli(weight - id)
+        if (d + nei.first > distance[nei.second]) {
+            distance[nei.second] = d + nei.first;
+            pq.push(nei);
         }
     }
 
-    queue.push_back(srdId);
- 
-    while (!queue.empty()) {
-        int u = queue.front();
-        queue.pop_front();
 
-        for (uint i = 0; i < adj[u].size(); i++) {
-            uint newId = adj[u][i].first;
-            double nextDistance = adj[u][i].second;
 
-            if (!visited[newId]) {
-                queue.push_back(newId);
-                double alt = dist[u] + nextDistance;
-                if (alt < dist[newId]) {
-                    dist[newId] = alt;
-                }
-            }
-
-            // Stop if destination found.
-            if (newId == destId) {
-                cout << dist[newId] << endl;
-                // pathResult.push_back(newAddLabel);
-                return true;
-            }
-        }
-
-        // choose min node to mark visited
-        int min_id = minDistance(dist, visited);
-        visited[min_id] = true;
     }
-
     return false;
 }
 

@@ -10,6 +10,7 @@
 using namespace std;
 
 typedef pair<int, double> idbl;
+typedef pair<double, int> dbli;
 typedef pair<int, int> ii;
 typedef vector<string> vs;
 typedef vector<vs> vvs;
