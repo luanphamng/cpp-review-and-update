@@ -1,0 +1,1 @@
+sudo chown -R luanpham:luanpham /var/calib
