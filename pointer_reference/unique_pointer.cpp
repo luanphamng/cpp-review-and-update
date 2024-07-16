@@ -16,7 +16,7 @@ public:
         std::cout << "CallbackClass Destructor called!" << std::endl;
     }
 
-    void someFunction() {
+    void someFunctiona() {
         std::cout << "CallbackClass Some function called!" << std::endl;
 
     }
@@ -58,7 +58,7 @@ public:
 
     void run() {
         cout << "HostClass::run - Trying to access ptr2 from func2" << endl;
-        ptr2->someFunction();
+        ptr2->someFunctiona();
         printf("HostClass::run - ptr2 address %p\n", &ptr2);
     }
 };
