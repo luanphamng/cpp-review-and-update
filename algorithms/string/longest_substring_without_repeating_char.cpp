@@ -65,50 +65,55 @@ int lengthOfLongestSubstring(string str)
 /************************** End O(N^2) ****************/
 
 /**************************** O(NlogN) *****************/
-int lengthOfLongestSubstring(string str)
-{
-    int length = str.size();
-    int result = 0;
-    int newStart = 0;
+// int lengthOfLongestSubstring(string str)
+// {
+//     int length = str.size();
+//     int result = 0;
+//     int newStart = 0;
 
-    for (int i = 0; i < length; i++)
-    {
-        vector<bool> visited(256); // All false
-        while (visited[str[i]] == false) {
-            visited[str[i]] = true;
-            i++;
-        }
+//     for (int i = 0; i < length; i++)
+//     {
+//         vector<bool> visited(256); // All false
+//         while (visited[str[i]] == false) {
+//             visited[str[i]] = true;
+//             i++;
+//         }
 
-        visited[str[i]] = true;
-        // I now as visited character. So length = i - 1 - newstart
-        result = max(result, i - 1 - newStart);
-        newStart = i;
+//         visited[str[i]] = true;
+//         // I now as visited character. So length = i - 1 - newstart
+//         result = max(result, i - 1 - newStart);
+//         newStart = i;
 
-    }
-    return result;
-}
+//     }
+//     return result;
+// }
 /************************** End O(NLogN) ****************/
 
 /**************************   O(N)  ****************/
+
+// Neu gap ki tu da check truoc do thi se slide windown sang diem newStart moi
+// Moi lan di qua 1 ki tu se tinh result va update max result
+// Moi lan di qua 1 ki tu se update lastIndex cua ki tu do.
+
 int lengthOfLongestSubstring(string str)
 {
     int length = str.size();
     int result = 0;
+
+    vector<int> lastIndex(256, -1);
     int newStart = 0;
 
-    for (int i = 0; i < length; i++)
-    {
-        vector<bool> visited(256); // All false
-        while (visited[str[i]] == false) {
-            visited[str[i]] = true;
-            i++;
-        }
+    for (int j = 0; j < length; j++) {
+        // Update newStart (starting index of current window)
+        // as maximum of current value of i and last index + 1
+        newStart = max(newStart, lastIndex[str[j]] + 1);
 
-        visited[str[i]] = true;
-        // I now as visited character. So length = i - 1 - newstart
-        result = max(result, i - 1 - newStart);
-        newStart = i;
+        // Update result if get a lagger window
+        result = max(result, j - newStart + 1);
 
+
+        // Find the last index of str[j]
+        lastIndex[str[j]] = j;
     }
     return result;
 }
