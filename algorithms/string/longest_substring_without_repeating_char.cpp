@@ -106,6 +106,7 @@ int lengthOfLongestSubstring(string str)
     for (int j = 0; j < length; j++) {
         // Update newStart (starting index of current window)
         // as maximum of current value of i and last index + 1
+        // If character are repeat, newStart will be updated
         newStart = max(newStart, lastIndex[str[j]] + 1);
 
         // Update result if get a lagger window
